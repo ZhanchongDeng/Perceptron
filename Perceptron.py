@@ -24,11 +24,11 @@ class Perceptron():
     w = 0         # Single
     w_voted = []    # Voted
     w_average = []   # Average
-    label_map = {}   # Maps given label to 1/-1
+    label_as_one = 0
     
-    def fit(self, training_data, num_passes):
+    def fit(self, training_data, num_passes, label_as_one):
         # Set up label mapping and initialize w
-        self.set_label_map(training_data)
+        self.label_as_one = label_as_one
         self.w = np.array([0] * (len(training_data[0])-1))
         # For voted
         cur_w_weight = 1
@@ -38,7 +38,7 @@ class Perceptron():
         for cur_pass in range(num_passes):
             for data in training_data:
                 # Transform label to 1/-1
-                y = self.label_map[data[-1]]
+                y = self.transform_label(data[-1])
                 # Update case:
                 if y * np.dot(data[:-1], self.w) <= 0:
                     self.w_voted.append([np.copy(self.w), cur_w_weight])
@@ -51,14 +51,11 @@ class Perceptron():
         self.w_average = self.set_average_w()
             
     
-    def set_label_map(self, training_data): 
-        unique_labels = np.unique(training_data[:,-1])
-        if len(unique_labels) != 2:
-            print("More than two labels")
-            return;
+    def transform_label(self, original_label): 
+        if original_label == self.label_as_one:
+            return 1
         else:
-            self.label_map[unique_labels[0]] = 1
-            self.label_map[unique_labels[1]] = -1
+            return -1
     
     '''
     Functions for Prediction/Testing
@@ -76,7 +73,7 @@ class Perceptron():
         # Transform test label to 1/-1
         actual = []
         for original_label in testing_data[:,-1]:
-            actual.append(self.label_map[original_label])
+            actual.append(self.transform_label(original_label))
         return np.mean(predictions != np.array(actual))
     
     
